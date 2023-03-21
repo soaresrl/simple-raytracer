@@ -1,4 +1,6 @@
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "utils/utility.h"
 #include "geometry/color.h"
@@ -9,6 +11,7 @@
 #include "objects/point_light.h"
 #include "objects/directional_light.h"
 #include "objects/light.h"
+
 
 /** 
  * Essa função calcula se um raio colide com uma esfera
@@ -122,7 +125,10 @@ int main() {
                 auto u = double(i + random_double()) / image_width;
                 auto v = double(j + random_double()) / image_height;
 
-                ray r = cam.get_ray(u, v);
+                glm::mat4 identity = glm::identity<glm::mat4>();
+                glm::mat4 rotation = glm::rotate(identity, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
+
+                ray r = cam.get_ray(u, v, rotation);
                 pixel_color += raycolor(r, world, 0.001, infinity, 5);
             }
             write_color(std::cout, pixel_color, samples_per_pixel);

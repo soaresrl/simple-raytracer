@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "utils/utility.h"
+#include <glm/glm.hpp>
 
 class camera {
 public:
@@ -31,9 +32,13 @@ public:
 	* A-B-*-*-*
 	*
 	*/
-	ray get_ray(double u, double v) const {
-		  
-		return ray(origin, point3(u*v_w, v*v_h, -focal_length) - origin);
+	ray get_ray(double u, double v, glm::mat4 rotation) const {
+		vec3 direction = point3(u * v_w, v * v_h, -focal_length) - origin;
+
+		glm::vec4 aux_vec(direction.x(), direction.y(), direction.z(), 1.0f);
+		glm::vec4 rotated_direction = rotation * aux_vec;
+
+		return ray(origin, vec3(rotated_direction.x, rotated_direction.y, rotated_direction.z));
 	}
 
 private:

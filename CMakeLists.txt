@@ -30,3 +30,5 @@ set(
 )
 
 add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY})
+
+target_include_directories(RayTracer PRIVATE external/glm)
