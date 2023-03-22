@@ -19,6 +19,7 @@ set(
 	objects/hittable.h
 	objects/hittable_list.h
 	objects/light.h
+	objects/plane.h
 	objects/point_light.h
 	objects/scene.h
 	objects/sphere.h

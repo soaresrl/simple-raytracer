@@ -8,11 +8,12 @@ class camera {
 public:
 	camera()  {
 		aspect_ratio = 16.0f / 9.0f;
-		v_h = 2.0;
+		fov = 45.0;
+		v_h = tan(glm::radians(45.0) / 2);
 		v_w = aspect_ratio * v_h;
-		focal_length = 1.0f;
+		focal_length = 1.0;
 
-		origin = point3(0, 0, 6);
+		origin = point3(0.0, 0.0, 0.0);
 		horizontal = vec3(v_w, 0.0, 0.0);
 		vertical = vec3(0.0, v_h, 0.0);	
 	}
@@ -49,6 +50,7 @@ private:
 	float v_h;
 	float aspect_ratio;
 	float focal_length;
+	float fov;
 };
 
 #endif // !CAMERA_H

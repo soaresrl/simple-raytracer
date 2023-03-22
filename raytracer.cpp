@@ -11,6 +11,8 @@
 #include "objects/point_light.h"
 #include "objects/directional_light.h"
 #include "objects/light.h"
+#include "objects/plane.h"
+#include "objects/box.h"
 
 
 /** 
@@ -68,7 +70,7 @@ color raycolor(const ray& r, scene& world, double t_min, double t_max/*, int dep
     //if (depth <= 0) return color(0, 0, 0);
 
     if (world.hit(r, t_min, t_max, rec)) {
-        point3 target = rec.p + rec.normal /* + random_in_unit_sphere() */;
+        //point3 target = rec.p + rec.normal /* + random_in_unit_sphere() */;
 
         color local_color = rec.col * computeLighting(rec.p, r.origin(), rec.normal, rec.specular, world);
 
@@ -100,14 +102,10 @@ int main() {
     // world 
     scene world;
 
-    world.add_object(make_shared<sphere>(point3(0.0, -1.0, -1.0), 1.0, color(1.0, 0.0, 0.0), 500, 0.2));
-    world.add_object(make_shared<sphere>(point3(-2.0, 0.0, -2.0), 1.0, color(0.0, 1.0, 0.0), 500, 0.5));
-    world.add_object(make_shared<sphere>(point3(2.0, 0.0, -2.0), 1.0, color(0.0, 0.0, 1.0), 500, 0.2));
-    world.add_object(make_shared<sphere>(point3(0.0, -5001.0, -1.0), 5000.0, color(1.0, 1.0, 0.0), 500, 0.1));
+    world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, color(1.0, 0.0, 0.0), 500, -1));
+    world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 500, 0.5));
+    world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 500, 0.2));
 
-
-    world.add_light(make_shared<point_light>(point3(-0.0, 2.0, -1.0), color(1.0, 1.0, 1.0)));
-    //world.add_light(make_shared<point_light>(point3(3.0, 3.0, -1.0), color(1.0, 1.0, 1.0)));
     world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
 
     // camera
@@ -116,6 +114,8 @@ int main() {
     // Render
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+    std::cerr << "\rScanlines remaining: " << image_height;
 
     for (int j = image_height / 2; j >= - image_height / 2; --j) {
         std::cerr << "\rScanlines remaining: " << j + image_height / 2 << ' ' << std::flush;
