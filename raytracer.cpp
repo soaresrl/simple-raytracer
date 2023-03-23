@@ -97,7 +97,7 @@ int main() {
     const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 100;
-    const int max_bounce = 50;
+    const int max_bounce = 1;
 
     // world 
     scene world;
@@ -105,8 +105,14 @@ int main() {
     world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, color(1.0, 0.0, 0.0), 500, -1));
     world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 500, 0.5));
     world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 500, 0.2));
+    world.add_object(make_shared<plane>(point3(0.0,-0.25,0.0), vec3(0.0, -1.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
+    world.add_object(make_shared<plane>(point3(-2.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
+    world.add_object(make_shared<plane>(point3(2.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
+    world.add_object(make_shared<plane>(point3(0.0, 0.0, -7.0), vec3(0.0, 0.0, -1.0), color(0.0, 1.0, 1.0), -1, -1));
 
     world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
+    world.add_light(make_shared<point_light>(point3(0.0, 5.0, -5.0),color(1.0, 1.0, 1.0)));
+
 
     // camera
     camera cam;
