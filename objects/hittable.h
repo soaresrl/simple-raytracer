@@ -12,6 +12,7 @@ struct hit_record
 	color col;
 	int specular;
 	float reflective;
+	float refractive_index;
 
 	inline void set_face_normal(const ray& r, const vec3& outward_normal) {
 		is_front_face = dot(r.direction(), outward_normal) < 0;

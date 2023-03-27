@@ -12,7 +12,7 @@
 #include "objects/directional_light.h"
 #include "objects/light.h"
 #include "objects/plane.h"
-#include "objects/box.h"
+//#include "objects/box.h"
 
 
 /** 
@@ -74,7 +74,7 @@ color raycolor(const ray& r, scene& world, double t_min, double t_max/*, int dep
 
         color local_color = rec.col * computeLighting(rec.p, r.origin(), rec.normal, rec.specular, world);
 
-        if (recursion_depth <= 0 || rec.reflective <= 0) {
+        if (recursion_depth <= 0 || rec.reflective == -1) {
             return local_color;
         }
 
@@ -82,8 +82,44 @@ color raycolor(const ray& r, scene& world, double t_min, double t_max/*, int dep
         ray reflected_ray(rec.p, reflected_ray_direction);
         
         color reflected_color = raycolor(reflected_ray, world, 0.001, infinity, recursion_depth - 1);
+        color refracted_color;
 
-        return local_color * (1 - rec.reflective) + reflected_color * rec.reflective;
+        if (dot(rec.normal, r.direction()) < 0) {
+            float refrac_ratio = 1.0 / rec.refractive_index;
+            double c1 = 1.0f - (pow(refrac_ratio, 2)) * (1.0 - pow(dot(r.direction(), rec.normal), 2));
+
+            if (c1 < 0.0) {
+                refracted_color = color(0.0, 0.0, 0.0);
+            }
+            else {
+                vec3 refracted_ray_direction =
+                    (r.direction() + (rec.normal * dot(r.direction(), rec.normal))) * 1.0 / rec.refractive_index - rec.normal * (sqrt(c1));
+                ray refracted_ray(rec.p, refracted_ray_direction);
+
+                refracted_color = raycolor(refracted_ray, world, 0.001, infinity, recursion_depth - 1);
+            }
+        }
+        else {
+            float refrac_ratio = rec.refractive_index;
+            double c1 = 1.0f - (pow(refrac_ratio, 2)) * (1.0 - pow(dot(r.direction(), -rec.normal), 2));
+
+            if (c1 < 0.0) {
+                refracted_color = color(0.0, 0.0, 0.0);
+            }
+            else {
+                vec3 refracted_ray_direction =
+                    (r.direction() + (-rec.normal * dot(r.direction(), -rec.normal))) * 1.0 / rec.refractive_index - (-rec.normal) * (sqrt(c1));
+                ray refracted_ray(rec.p, refracted_ray_direction);
+
+                refracted_color = raycolor(refracted_ray, world, 0.001, infinity, recursion_depth - 1);
+            }
+        }
+
+        if (rec.refractive_index <= 0) {
+            return local_color * (1 - rec.reflective) + reflected_color * rec.reflective;
+        }
+
+        return refracted_color * (1 - rec.reflective) + reflected_color * rec.reflective;
     }
 
     vec3 unit_direction = unit_vector(r.direction());
@@ -94,23 +130,21 @@ color raycolor(const ray& r, scene& world, double t_min, double t_max/*, int dep
 int main() {
     // Image Properties
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
+    const int image_width = 1600;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 100;
+    const int samples_per_pixel = 10;
     const int max_bounce = 1;
 
     // world 
     scene world;
 
     world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, color(1.0, 0.0, 0.0), 500, -1));
-    world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 500, 0.5));
-    world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 500, 0.2));
+    world.add_object(make_shared<sphere>(point3(-0.5, 0.0, -4.0), 0.25, color(0.0, 1.0, 0.0), 2, 0.0, 1.15));
+    world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 500, 0.1));
+    world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 2, 1.0));
     world.add_object(make_shared<plane>(point3(0.0,-0.25,0.0), vec3(0.0, -1.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
-    world.add_object(make_shared<plane>(point3(-2.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
-    world.add_object(make_shared<plane>(point3(2.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
-    world.add_object(make_shared<plane>(point3(0.0, 0.0, -7.0), vec3(0.0, 0.0, -1.0), color(0.0, 1.0, 1.0), -1, -1));
 
-    world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
+    //world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
     world.add_light(make_shared<point_light>(point3(0.0, 5.0, -5.0),color(1.0, 1.0, 1.0)));
 
 
@@ -123,9 +157,9 @@ int main() {
 
     std::cerr << "\rScanlines remaining: " << image_height;
 
-    for (int j = image_height / 2; j >= - image_height / 2; --j) {
-        std::cerr << "\rScanlines remaining: " << j + image_height / 2 << ' ' << std::flush;
-        for (int i = -image_width/2; i < image_width/2; ++i) {
+    for (int j = image_height/2; j > -image_height/2; --j) {
+        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        for (int i = - image_width / 2; i < image_width / 2; ++i) {
             color pixel_color(0.0, 0.0, 0.0);
             for (int s = 0; s < samples_per_pixel; s++) {
                 auto u = double(i + random_double()) / image_width;

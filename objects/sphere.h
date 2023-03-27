@@ -7,7 +7,7 @@
 class sphere : public hittable {
 	public:
 		sphere(){}
-		sphere(point3 _center, double r, color color, int _specular, float _reflective) : center(_center), radius(r), col(color), specular(_specular), reflective(_reflective) {};
+		sphere(point3 _center, double r, color color, int _specular, float _reflective, float _refractive = -1.0) : center(_center), radius(r), col(color), specular(_specular), reflective(_reflective), refractive_index(_refractive) {};
 
 		virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
 
@@ -17,6 +17,7 @@ class sphere : public hittable {
         color col;
         int specular;
         float reflective;
+        float refractive_index;
 };
 
 bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
@@ -49,6 +50,7 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
     rec.col = col;
     rec.specular = specular;
     rec.reflective = reflective;
+    rec.refractive_index = refractive_index;
     
     vec3 outward_normal = (rec.p - center) / radius;
     rec.set_face_normal(r, outward_normal);

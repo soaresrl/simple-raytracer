@@ -13,7 +13,7 @@ public:
 		v_w = aspect_ratio * v_h;
 		focal_length = 1.0;
 
-		origin = point3(0.0, 0.0, 0.0);
+		origin = point3(0.0, 0.0, 5.0);
 		horizontal = vec3(v_w, 0.0, 0.0);
 		vertical = vec3(0.0, v_h, 0.0);	
 	}
@@ -34,7 +34,8 @@ public:
 	*
 	*/
 	ray get_ray(double u, double v, glm::mat4 rotation) const {
-		vec3 direction = point3(u * v_w, v * v_h, -focal_length) - origin;
+		vec3 direction = point3(u * v_w, v * v_h, -focal_length + origin.z()) - origin;
+		//vec3 direction = point3(u * v_w + origin.x(), v * v_h + origin.y(), -focal_length + origin.z()) - origin;
 
 		glm::vec4 aux_vec(direction.x(), direction.y(), direction.z(), 1.0f);
 		glm::vec4 rotated_direction = rotation * aux_vec;
