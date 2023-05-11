@@ -5,7 +5,6 @@
 #include "objects/light.h"
 #include "geometry/color.h"
 #include "geometry/vec3.h"
-#include "scene.h"
 
 class directional_light : public Light {
 public:

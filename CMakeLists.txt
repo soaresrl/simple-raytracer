@@ -28,8 +28,17 @@ set(
 set(
 	UTILITY
 	utils/utility.h
+	utils/raycolor.h
 )
 
-add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY})
+set(
+	MATERIAL
+	materials/material.h
+	materials/metal.h
+	materials/dielectric.h
+	materials/lambertian.h
+)
+
+add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} "materials/dielectric.h")
 
 target_include_directories(RayTracer PRIVATE external/glm)

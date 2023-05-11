@@ -1,6 +1,8 @@
 #include <iostream>
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <fstream>
 
 #include "utils/utility.h"
 #include "geometry/color.h"
@@ -12,6 +14,12 @@
 #include "objects/directional_light.h"
 #include "objects/light.h"
 #include "objects/plane.h"
+#include "utils/raycolor.h"
+
+#include "materials/dielectric.h"
+#include "materials/lambertian.h"
+#include "materials/metal.h"
+
 //#include "objects/box.h"
 
 
@@ -44,89 +52,6 @@ double hit_sphere(const point3& center, double radius, const ray& r) {
     return (-b - sqrt(delta)) / (2.0 * a);
 }
 
-color computeLighting(point3 point, point3 camera_pos, vec3 normal, int specular, scene& world) {
-    color light_contribution(0.0, 0.0, 0.0);
-
-    // ambient
-    color ambient_light(0.2, 0.2, 0.2);
-
-    light_contribution += ambient_light;
-
-    light_contribution += world.calc_light(camera_pos, point, normal, specular);
-
-    return light_contribution;
-}
-
-/**
- * Essa função irá fazer um gradiente entre branco e azul
- * para que sirva como o background quando um raio não
- * colidir com nenhum objeto
- * caso colida, a cor do pixel será vermelha
-
-*/
-color raycolor(const ray& r, scene& world, double t_min, double t_max/*, int depth*/, int recursion_depth) {
-    hit_record rec;
-
-    //if (depth <= 0) return color(0, 0, 0);
-
-    if (world.hit(r, t_min, t_max, rec)) {
-        //point3 target = rec.p + rec.normal /* + random_in_unit_sphere() */;
-
-        color local_color = rec.col * computeLighting(rec.p, r.origin(), rec.normal, rec.specular, world);
-
-        if (recursion_depth <= 0 || rec.reflective == -1) {
-            return local_color;
-        }
-
-        vec3 reflected_ray_direction = 2 * rec.normal * dot(rec.normal, - r.direction()) + r.direction();
-        ray reflected_ray(rec.p, reflected_ray_direction);
-        
-        color reflected_color = raycolor(reflected_ray, world, 0.001, infinity, recursion_depth - 1);
-        color refracted_color;
-
-        if (dot(rec.normal, r.direction()) < 0) {
-            float refrac_ratio = 1.0 / rec.refractive_index;
-            double c1 = 1.0f - (pow(refrac_ratio, 2)) * (1.0 - pow(dot(r.direction(), rec.normal), 2));
-
-            if (c1 < 0.0) {
-                refracted_color = color(0.0, 0.0, 0.0);
-            }
-            else {
-                vec3 refracted_ray_direction =
-                    (r.direction() + (rec.normal * dot(r.direction(), rec.normal))) * 1.0 / rec.refractive_index - rec.normal * (sqrt(c1));
-                ray refracted_ray(rec.p, refracted_ray_direction);
-
-                refracted_color = raycolor(refracted_ray, world, 0.001, infinity, recursion_depth - 1);
-            }
-        }
-        else {
-            float refrac_ratio = rec.refractive_index;
-            double c1 = 1.0f - (pow(refrac_ratio, 2)) * (1.0 - pow(dot(r.direction(), -rec.normal), 2));
-
-            if (c1 < 0.0) {
-                refracted_color = color(0.0, 0.0, 0.0);
-            }
-            else {
-                vec3 refracted_ray_direction =
-                    (r.direction() + (-rec.normal * dot(r.direction(), -rec.normal))) * 1.0 / rec.refractive_index - (-rec.normal) * (sqrt(c1));
-                ray refracted_ray(rec.p, refracted_ray_direction);
-
-                refracted_color = raycolor(refracted_ray, world, 0.001, infinity, recursion_depth - 1);
-            }
-        }
-
-        if (rec.refractive_index <= 0) {
-            return local_color * (1 - rec.reflective) + reflected_color * rec.reflective;
-        }
-
-        return refracted_color * (1 - rec.reflective) + reflected_color * rec.reflective;
-    }
-
-    vec3 unit_direction = unit_vector(r.direction());
-    auto t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
-}
-
 int main() {
     // Image Properties
     const auto aspect_ratio = 16.0 / 9.0;
@@ -135,45 +60,65 @@ int main() {
     const int samples_per_pixel = 10;
     const int max_bounce = 1;
 
-    // world 
-    scene world;
+    float refractive = 2.25;
 
-    world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, color(1.0, 0.0, 0.0), 500, -1));
-    world.add_object(make_shared<sphere>(point3(-0.5, 0.0, -4.0), 0.25, color(0.0, 1.0, 0.0), 2, 0.0, 1.15));
-    world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 500, 0.1));
-    world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 2, 1.0));
-    world.add_object(make_shared<plane>(point3(0.0,-0.25,0.0), vec3(0.0, -1.0, 0.0), color(0.0, 1.0, 1.0), -1, -1));
+    //float total_frames = 1;
 
-    //world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
-    world.add_light(make_shared<point_light>(point3(0.0, 5.0, -5.0),color(1.0, 1.0, 1.0)));
+    //int i = 1;
+    
+    //while (refractive <= 2.5)
+    //{
+        std::ofstream outdata("10_05_positionable_camera" + std::to_string(refractive) + ".ppm");
 
+        // world 
+        scene world;
 
-    // camera
-    camera cam;
+        // materials
+        auto material1 = make_shared<Dielectric>(2.25);
+        auto material2 = make_shared<Lambertian>(color(0.4, 0.2, 0.1));
+        auto material3 = make_shared<Metal>(color(0.7, 0.6, 0.5), 0.0);
 
-    // Render
+        world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, material2));
+        world.add_object(make_shared<sphere>(point3(-0.25, 0.0, -4.0), 0.25, material1));
+        world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, material2));
+        world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, material3));
+        world.add_object(make_shared<plane>(point3(0.0, -0.25, 0.0), vec3(0.0, -1.0, 0.0), material2));
 
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        //world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
+        world.add_light(make_shared<point_light>(point3(-3.0, 2.0, -5.0), color(1.0, 1.0, 1.0)));
+        world.add_light(make_shared<point_light>(point3(3.0, 2.0, -5.0), color(1.0, 1.0, 1.0)));
+        world.add_light(make_shared<point_light>(point3(0.0, 2.0, -4.0), color(1.0, 1.0, 1.0)));
 
-    std::cerr << "\rScanlines remaining: " << image_height;
+        // camera
+        camera cam(point3(-2, 2, 1), point3(0, 0, -4), vec3(0, 1, 0), 90, aspect_ratio);
 
-    for (int j = image_height/2; j > -image_height/2; --j) {
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-        for (int i = - image_width / 2; i < image_width / 2; ++i) {
-            color pixel_color(0.0, 0.0, 0.0);
-            for (int s = 0; s < samples_per_pixel; s++) {
-                auto u = double(i + random_double()) / image_width;
-                auto v = double(j + random_double()) / image_height;
+        // Render
 
-                glm::mat4 identity = glm::identity<glm::mat4>();
-                glm::mat4 rotation = glm::rotate(identity, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        outdata << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-                ray r = cam.get_ray(u, v, rotation);
-                pixel_color += raycolor(r, world, 0.001, infinity, 5);
+        std::cerr << "\rScanlines remaining: " << image_height;// << "frame: " << i; //<< "of: " << total_frames;
+
+        for (int j = image_height; j > 0; --j) {
+            std::cerr << "\rScanlines remaining: " << j;// << ' ' << "frame: " << i << "of: " << total_frames << std::flush;
+            for (int i = 0; i < image_width; ++i) {
+                color pixel_color(0.0, 0.0, 0.0);
+                for (int s = 0; s < samples_per_pixel; s++) {
+                    auto u = double(i + random_double()) / image_width;
+                    auto v = double(j + random_double()) / image_height;
+
+                    //glm::mat4 identity = glm::identity<glm::mat4>();
+                    //glm::mat4 rotation = glm::rotate(identity, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
+
+                    ray r = cam.get_ray(u, v);
+                    pixel_color += ray_color(r, world/*, 0.001, infinity*/, 5);
+                }
+                write_color(outdata, pixel_color, samples_per_pixel);
             }
-            write_color(std::cout, pixel_color, samples_per_pixel);
         }
-    }
 
-    std::cerr << "\nDone.\n";
+        std::cerr << "\nDone.\n";
+
+        //i++;
+        //refractive += 0.02;
+    //}
 }

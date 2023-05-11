@@ -2,6 +2,25 @@
 #define HITTABLE_H
 
 #include "geometry/ray.h"
+#include "materials/material.h"
+
+//struct hit_record
+//{
+//	point3 p;
+//	vec3 normal;
+//	double t;
+//	bool is_front_face;
+//	color col;
+//	int specular;
+//	float reflective;
+//	float refractive_index;
+//	float translucency;
+//
+//	inline void set_face_normal(const ray& r, const vec3& outward_normal) {
+//		is_front_face = dot(r.direction(), outward_normal) < 0;
+//		normal = is_front_face ? outward_normal : -outward_normal;
+//	}
+//};
 
 struct hit_record
 {
@@ -9,10 +28,7 @@ struct hit_record
 	vec3 normal;
 	double t;
 	bool is_front_face;
-	color col;
-	int specular;
-	float reflective;
-	float refractive_index;
+	shared_ptr<Material> material_ptr;
 
 	inline void set_face_normal(const ray& r, const vec3& outward_normal) {
 		is_front_face = dot(r.direction(), outward_normal) < 0;

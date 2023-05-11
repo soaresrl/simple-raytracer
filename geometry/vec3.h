@@ -92,6 +92,10 @@ inline vec3 operator/(vec3 v, double t) {
     return (1 / t) * v;
 }
 
+inline vec3 operator%(const vec3& u, const vec3& v) {
+    return vec3(u[0] * v[0], u[1] * v[1], u[2] * v[2]);
+}
+
 inline double dot(const vec3& u, const vec3& v) {
     return u.e[0] * v.e[0]
         + u.e[1] * v.e[1]
@@ -116,6 +120,23 @@ vec3 random_in_unit_sphere() {
 
         return p;
     }
+}
+
+inline vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
+
+inline vec3 reflect(const vec3& v, const vec3& n) {
+    return v - 2 * dot(v, n) * n;
+}
+
+inline vec3 refract(const vec3& uv, const vec3& n, float etai_over_etat) {
+    double c1 = 1.0f - (pow(etai_over_etat, 2)) * (1.0 - pow(dot(-uv, n), 2));
+
+        vec3 refracted_ray_direction =
+            (uv + (n * dot(-uv, n))) * etai_over_etat - n * (sqrt(c1));
+
+        return refracted_ray_direction;
 }
 
 #endif
