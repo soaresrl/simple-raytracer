@@ -15,11 +15,6 @@
 #include "objects/light.h"
 #include "objects/plane.h"
 #include "utils/raycolor.h"
-
-#include "materials/dielectric.h"
-#include "materials/lambertian.h"
-#include "materials/metal.h"
-
 //#include "objects/box.h"
 
 
@@ -68,21 +63,16 @@ int main() {
     
     //while (refractive <= 2.5)
     //{
-        std::ofstream outdata("10_05_positionable_camera" + std::to_string(refractive) + ".ppm");
+        std::ofstream outdata("10_05_positionable_camera_not_refac" + std::to_string(refractive) + ".ppm");
 
         // world 
         scene world;
 
-        // materials
-        auto material1 = make_shared<Dielectric>(2.25);
-        auto material2 = make_shared<Lambertian>(color(0.4, 0.2, 0.1));
-        auto material3 = make_shared<Metal>(color(0.7, 0.6, 0.5), 0.0);
-
-        world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, material2));
-        world.add_object(make_shared<sphere>(point3(-0.25, 0.0, -4.0), 0.25, material1));
-        world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, material2));
-        world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, material3));
-        world.add_object(make_shared<plane>(point3(0.0, -0.25, 0.0), vec3(0.0, -1.0, 0.0), material2));
+        world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, color(1.0, 0.0, 0.0), 2, -1, -1, 0.0));
+        world.add_object(make_shared<sphere>(point3(-0.25, 0.0, -4.0), 0.25, color(0.0, 1.0, 0.0), -1, 0.0, refractive, 1.0));
+        world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, color(0.0, 1.0, 0.0), 2, -1, -1, 0.0));
+        world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, color(0.0, 0.0, 1.0), 2, 1.0, -1, 0.0));
+        world.add_object(make_shared<plane>(point3(0.0, -0.25, 0.0), vec3(0.0, -1.0, 0.0), color(0.0, 1.0, 1.0), 2.0, -1, -1, 0.0));
 
         //world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
         world.add_light(make_shared<point_light>(point3(-3.0, 2.0, -5.0), color(1.0, 1.0, 1.0)));
@@ -110,7 +100,7 @@ int main() {
                     //glm::mat4 rotation = glm::rotate(identity, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
                     ray r = cam.get_ray(u, v);
-                    pixel_color += ray_color(r, world/*, 0.001, infinity*/, 5);
+                    pixel_color += raycolor(r, world, 0.001, infinity, 5);
                 }
                 write_color(outdata, pixel_color, samples_per_pixel);
             }

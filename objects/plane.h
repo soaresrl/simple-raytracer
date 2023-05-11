@@ -8,13 +8,18 @@
 
 class plane : public hittable {
 public:
-	plane(point3 _point, vec3 _normal, shared_ptr<Material> mat) : point(_point), normal(_normal), material_ptr(mat) {}
+	plane(point3 _point, vec3 _normal, color color, int _specular, float _reflective, float _refractive, float _translucency) : point(_point), normal(_normal), col(color), specular(_specular), reflective(_reflective), refractive_index(_refractive), translucency(_translucency) {}
 	virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
 
 public:
 	point3 point;
 	vec3 normal;
-	shared_ptr<Material> material_ptr;
+
+	color col;
+	int specular;
+	float reflective;
+	float refractive_index;
+	float translucency;
 };
 
 bool plane::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
@@ -28,7 +33,12 @@ bool plane::hit(const ray& r, double t_min, double t_max, hit_record& rec) const
 		if (t >= t_min && t <= t_max) {
 			rec.t = t;
 			rec.p = r.at(rec.t);
-			rec.material_ptr = material_ptr;
+
+			rec.col = col;
+			rec.specular = specular;
+			rec.reflective = reflective;
+			rec.refractive_index = refractive_index;
+			rec.translucency = translucency;
 			rec.set_face_normal(r, normal);
 
 			return true;
