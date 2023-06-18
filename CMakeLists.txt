@@ -10,6 +10,7 @@ set(
 	geometry/vec3.h
 	geometry/color.h
 	geometry/ray.h
+	geometry/orthonormalbasis.h
 )
 
 set(
@@ -23,6 +24,8 @@ set(
 	objects/point_light.h
 	objects/scene.h
 	objects/sphere.h
+	objects/xy_plane.h
+	objects/triangle.h
 )
 
 set(
@@ -33,12 +36,22 @@ set(
 
 set(
 	MATERIAL
+	materials/dielectric.h
+	materials/diffuse_light.h
 	materials/material.h
 	materials/metal.h
-	materials/dielectric.h
 	materials/lambertian.h
 )
 
-add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} "materials/dielectric.h")
+set(
+	SAMPLING
+	sampling/pdf.h
+	sampling/cosine_pdf.h
+)
+
+add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING})
 
 target_include_directories(RayTracer PRIVATE external/glm)
+
+add_custom_command(TARGET RayTracer POST_BUILD 
+                    COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/assets")

@@ -18,13 +18,15 @@ inline double degrees_to_radians(double deg) {
 }
 
 inline double random_double() {
-	// Retorna um número real [0, 1)
 	return rand() / (RAND_MAX + 1.0);
 }
 
 inline double random_double(double min, double max) {
-	// Retorna um número real [min, max)
 	return min + (max - min) * random_double();
+}
+
+inline int random_int(int min, int max) {
+	return static_cast<int>(random_double(min, max + 1));
 }
 
 inline double clamp(double x, double min, double max) {
@@ -36,5 +38,17 @@ inline double clamp(double x, double min, double max) {
 
 #include "geometry/ray.h"
 #include "geometry/vec3.h"
+
+inline vec3 random_cosine_direction() {
+	double ksi1 = random_double();
+	double ksi2 = random_double();
+	auto z = sqrt(1 - ksi2);
+
+	auto phi = 2 * pi * ksi1;
+	auto x = cos(phi) * sqrt(ksi2);
+	auto y = sin(phi) * sqrt(ksi2);
+
+	return vec3(x, y, z);
+}
 
 #endif // !UTILITY_H

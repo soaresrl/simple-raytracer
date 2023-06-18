@@ -5,6 +5,10 @@
 #include <fstream>
 
 #include "utils/utility.h"
+#include "utils/raycolor.h"
+
+#include "io/stl.h"
+
 #include "geometry/color.h"
 #include "objects/hittable_list.h"
 #include "objects/sphere.h"
@@ -14,14 +18,39 @@
 #include "objects/directional_light.h"
 #include "objects/light.h"
 #include "objects/plane.h"
-#include "utils/raycolor.h"
+#include "objects/xy_plane.h"
+#include "objects/flip_face.h"
+#include "objects/triangle.h"
 
+#include "materials/diffuse_light.h"
 #include "materials/dielectric.h"
 #include "materials/lambertian.h"
 #include "materials/metal.h"
 
-//#include "objects/box.h"
+scene cornell_box() {
+    scene objects;
 
+    auto red = make_shared<Lambertian>(color(.65, .05, .05));
+    auto white = make_shared<Lambertian>(color(.73, .73, .73));
+    auto green = make_shared<Lambertian>(color(.12, .45, .15));
+    auto light = make_shared<DiffuseLight>(color(15, 15, 15));
+
+    objects.add_object(make_shared<Triangle>(point3{ -3.0, 0.0, 0.0 }, point3{ 0.0, 5.0, 0.0 }, point3{ 3.0, 0.0, 0.0 }, red));
+    objects.add_object(make_shared<YZ_Plane>(point3{ -5, 0.0, 0.0 }, 10, 10, green));
+    objects.add_object(make_shared<YZ_Plane>(point3{ 5, 0.0, 0.0 }, 10, 10, red));
+    objects.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 4.995, 0.0 }, 5, 5, light)));
+    objects.add_object(make_shared<XZ_Plane>(point3{ 0.0, 5, 0.0 }, 10, 10, white));
+    objects.add_object(make_shared<XZ_Plane>(point3{ 0.0, -5, 0.0 }, 10, 10, white));
+    objects.add_object(make_shared<XY_Plane>(point3{ 0.0, 0.0, -5 }, 10, 10, white));
+
+    auto dielectric = make_shared<Dielectric>(1.75);
+    auto metal = make_shared<Metal>(color{ 1.0, 1.0, 1.0 }, 0.5);
+    objects.add_object(make_shared<sphere>(point3{ 0.0, -3.5, 0.0 }, 1.5, dielectric));
+    objects.add_object(make_shared<sphere>(point3{ -3.0, -3.5, 0.0 }, 1.5, red));
+    objects.add_object(make_shared<sphere>(point3{ 3.0, -3.5, 0.0 }, 1.5, metal));
+
+    return objects;
+}
 
 /** 
  * Essa função calcula se um raio colide com uma esfera
@@ -58,7 +87,7 @@ int main() {
     const int image_width = 1600;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 10;
-    const int max_bounce = 1;
+    const int max_bounce = 5;
 
     float refractive = 2.25;
 
@@ -68,29 +97,39 @@ int main() {
     
     //while (refractive <= 2.5)
     //{
-        std::ofstream outdata("10_05_positionable_camera" + std::to_string(refractive) + ".ppm");
+        std::ofstream outdata("08_06_cornell_box.ppm"/* + std::to_string(refractive) + ".ppm"*/);
 
         // world 
+        // scene world = cornell_box();
+
         scene world;
 
-        // materials
-        auto material1 = make_shared<Dielectric>(2.25);
-        auto material2 = make_shared<Lambertian>(color(0.4, 0.2, 0.1));
-        auto material3 = make_shared<Metal>(color(0.7, 0.6, 0.5), 0.0);
+            
+        auto objs = FromOBJ("./assets/ob1.obj");
 
-        world.add_object(make_shared<sphere>(point3(0.0, 0.0, -5.0), 0.25, material2));
-        world.add_object(make_shared<sphere>(point3(-0.25, 0.0, -4.0), 0.25, material1));
-        world.add_object(make_shared<sphere>(point3(-1.0, 0.0, -5.0), 0.25, material2));
-        world.add_object(make_shared<sphere>(point3(1.0, 0.0, -5.0), 0.25, material3));
-        world.add_object(make_shared<plane>(point3(0.0, -0.25, 0.0), vec3(0.0, -1.0, 0.0), material2));
+        for (auto& obj : objs)
+        {
+            world.add_object(obj);
+        }
 
-        //world.add_light(make_shared<directional_light>(color(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0)));
-        world.add_light(make_shared<point_light>(point3(-3.0, 2.0, -5.0), color(1.0, 1.0, 1.0)));
-        world.add_light(make_shared<point_light>(point3(3.0, 2.0, -5.0), color(1.0, 1.0, 1.0)));
-        world.add_light(make_shared<point_light>(point3(0.0, 2.0, -4.0), color(1.0, 1.0, 1.0)));
+        auto white = make_shared<Lambertian>(color(.73, .73, .73));
+
+        world.add_object(make_shared<XZ_Plane>(point3{ 0.0, -18, 0.0 }, 36, 36, white));
+        world.add_object(make_shared<XZ_Plane>(point3{ 0.0, 18, 0.0 }, 36, 36, white));
+        world.add_object(make_shared<YZ_Plane>(point3{ -18, 0.0, 0.0 }, 36, 36, white));
+        world.add_object(make_shared<YZ_Plane>(point3{ 18, 0.0, 0.0 }, 36, 36, white));
+        world.add_object(make_shared<XY_Plane>(point3{ 0.0, 0.0, -10.0 }, 36, 36, white));
+
+        auto light = make_shared<DiffuseLight>(color(15, 15, 15));
+        world.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 17.995, 0.0 }, 15, 15, light)));
+
+        auto lights = make_shared<hittable_list>();
+        auto light_importance = make_shared<DiffuseLight>(color(15, 15, 15));
+
+        lights->add(make_shared<XZ_Plane>(point3{ 0.0, 17.995, 0.0 }, 15, 15, light_importance));
 
         // camera
-        camera cam(point3(-2, 2, 1), point3(0, 0, -4), vec3(0, 1, 0), 90, aspect_ratio);
+        camera cam(point3(0.0, 18, 100), point3(0, 6.0, 0.0), vec3(0, 1, 0), 45, aspect_ratio);
 
         // Render
 
@@ -110,7 +149,7 @@ int main() {
                     //glm::mat4 rotation = glm::rotate(identity, glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
                     ray r = cam.get_ray(u, v);
-                    pixel_color += ray_color(r, world/*, 0.001, infinity*/, 5);
+                    pixel_color += ray_color(r, world, lights, max_bounce);
                 }
                 write_color(outdata, pixel_color, samples_per_pixel);
             }

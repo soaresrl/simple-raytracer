@@ -10,9 +10,12 @@ public:
     Dielectric(float _refractionIndex) : refractionIndex(_refractionIndex) {}
 
     virtual bool scatter(
-        const ray& in, const hit_record& rec, color& attenuation, ray& scattered
+        const ray& in, const hit_record& rec, scatter_record& srec
     ) const override {
-        attenuation = color(1.0, 1.0, 1.0);
+        srec.attenuation = color(1.0, 1.0, 1.0);
+        srec.is_specular = true;
+        srec.pdf_ptr = nullptr;
+
         float refraction_ratio = rec.is_front_face ? (1.0 / refractionIndex) : refractionIndex;
 
         vec3 unit_direction = unit_vector(in.direction());
@@ -27,7 +30,7 @@ public:
         else
             direction = refract(unit_direction, rec.normal, refraction_ratio);
 
-        scattered = ray(rec.p, direction);
+        srec.specular = ray(rec.p, direction);
         return true;
     }
 
@@ -36,8 +39,7 @@ public:
 
 private:
     static double reflectance(double cosine, double ref_idx) {
-        // Use Schlick's approximation for reflectance.
-        auto r0 = (1 - ref_idx) / (1 + ref_idx);
+        double r0 = (1 - ref_idx) / (1 + ref_idx);
         r0 = r0 * r0;
         return r0 + (1 - r0) * pow((1 - cosine), 5);
     }
