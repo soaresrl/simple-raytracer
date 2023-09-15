@@ -1,7 +1,5 @@
 #include <iostream>
 #include <string>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include <fstream>
 
 #include "utils/utility.h"
@@ -27,6 +25,12 @@
 #include "materials/lambertian.h"
 #include "materials/metal.h"
 
+#include "octree/primitives/sphere.h"
+#include "octree/primitives/block.h"
+#include "octree/primitives/cylinder.h"
+#include "octree/primitives/cone.h"
+#include "octree/octree.h"
+
 scene cornell_box() {
     scene objects;
 
@@ -35,7 +39,7 @@ scene cornell_box() {
     auto green = make_shared<Lambertian>(color(.12, .45, .15));
     auto light = make_shared<DiffuseLight>(color(15, 15, 15));
 
-    objects.add_object(make_shared<Triangle>(point3{ -3.0, 0.0, 0.0 }, point3{ 0.0, 5.0, 0.0 }, point3{ 3.0, 0.0, 0.0 }, red));
+    //objects.add_object(make_shared<Triangle>(point3{ -3.0, 0.0, 0.0 }, point3{ 0.0, 5.0, 0.0 }, point3{ 3.0, 0.0, 0.0 }, red));
     objects.add_object(make_shared<YZ_Plane>(point3{ -5, 0.0, 0.0 }, 10, 10, green));
     objects.add_object(make_shared<YZ_Plane>(point3{ 5, 0.0, 0.0 }, 10, 10, red));
     objects.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 4.995, 0.0 }, 5, 5, light)));
@@ -45,40 +49,25 @@ scene cornell_box() {
 
     auto dielectric = make_shared<Dielectric>(1.75);
     auto metal = make_shared<Metal>(color{ 1.0, 1.0, 1.0 }, 0.5);
-    objects.add_object(make_shared<sphere>(point3{ 0.0, -3.5, 0.0 }, 1.5, dielectric));
-    objects.add_object(make_shared<sphere>(point3{ -3.0, -3.5, 0.0 }, 1.5, red));
-    objects.add_object(make_shared<sphere>(point3{ 3.0, -3.5, 0.0 }, 1.5, metal));
+    //objects.add_object(make_shared<sphere>(point3{ 0.0, -3.5, 0.0 }, 1.5, dielectric));
+    //objects.add_object(make_shared<sphere>(point3{ -3.0, -3.5, 0.0 }, 1.5, red));
+
+    // Sphere sphere{ point3{0.0f, -3.5f, 0.0f}, 1.5 };
+    // Block box{ point3{0.0, -3.5f, 0.0f}, 3.0 };
+    // Cylinder cylinder{ point3{0.0, -3.5f, 0.0}, 1.5, 3.0 };
+    Cone cone{ point3{0.0, -3.5f, 0.0f}, 1.5, 3.0 };
+
+    cone.ComputeBoundingBox();
+
+    double size = max(max((cone.max.x() - cone.min.x()), cone.max.y() - cone.min.y()), (cone.max.z() - cone.min.z()));
+
+    shared_ptr<Voxel> octree = make_shared<Voxel>( size, cone.Center(), red );
+
+    BuildOctree(&cone, octree, 5);
+
+    objects.add_object(octree);
 
     return objects;
-}
-
-/** 
- * Essa função calcula se um raio colide com uma esfera
- * vale relembrar que pode possuir dois casos, com:
- * - 0 raízes reais - não colide com a esfera
- * - 1 raíz real - colide com a esfera de forma tangente
- * - 2 raízes reais - colide com a esfera passando de um lado para o outro
- * 
- * para solucionar é necessário resolver a equação do segundo grau
- * (b.b)*t^2 + (2.b.(A-C)).t + (A-C).(A-C) - r^2 = 0
- * 
- * onde b é o vetor que dá direção ao raio, A a origem do raio
- * e C o centro da esfera, e r o raio da esfera.
-*/
-double hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 origin_to_center = r.origin() - center;
-
-    auto a = dot(r.direction(), r.direction());
-    auto b = 2.0 * dot(origin_to_center, r.direction());
-    auto c = dot(origin_to_center, origin_to_center) - (radius * radius);
-
-    auto delta = (b * b) - (4 * a * c);
-
-    if (delta < 0) {
-        return -1.0;
-    }
-    
-    return (-b - sqrt(delta)) / (2.0 * a);
 }
 
 int main() {
@@ -100,36 +89,36 @@ int main() {
         std::ofstream outdata("08_06_cornell_box.ppm"/* + std::to_string(refractive) + ".ppm"*/);
 
         // world 
-        // scene world = cornell_box();
+        scene world = cornell_box();
 
-        scene world;
+        //scene world;
 
             
-        auto objs = FromOBJ("./assets/ob1.obj");
+        //auto objs = FromOBJ("./assets/ob1.obj");
 
-        for (auto& obj : objs)
+        /*for (auto& obj : objs)
         {
             world.add_object(obj);
-        }
+        }*/
 
         auto white = make_shared<Lambertian>(color(.73, .73, .73));
 
-        world.add_object(make_shared<XZ_Plane>(point3{ 0.0, -18, 0.0 }, 36, 36, white));
+        /*world.add_object(make_shared<XZ_Plane>(point3{ 0.0, -18, 0.0 }, 36, 36, white));
         world.add_object(make_shared<XZ_Plane>(point3{ 0.0, 18, 0.0 }, 36, 36, white));
         world.add_object(make_shared<YZ_Plane>(point3{ -18, 0.0, 0.0 }, 36, 36, white));
         world.add_object(make_shared<YZ_Plane>(point3{ 18, 0.0, 0.0 }, 36, 36, white));
-        world.add_object(make_shared<XY_Plane>(point3{ 0.0, 0.0, -10.0 }, 36, 36, white));
+        world.add_object(make_shared<XY_Plane>(point3{ 0.0, 0.0, -10.0 }, 36, 36, white));*/
 
-        auto light = make_shared<DiffuseLight>(color(15, 15, 15));
-        world.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 17.995, 0.0 }, 15, 15, light)));
+        //auto light = make_shared<DiffuseLight>(color(15, 15, 15));
+        //world.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 17.995, 0.0 }, 15, 15, light)));
 
         auto lights = make_shared<hittable_list>();
         auto light_importance = make_shared<DiffuseLight>(color(15, 15, 15));
 
-        lights->add(make_shared<XZ_Plane>(point3{ 0.0, 17.995, 0.0 }, 15, 15, light_importance));
+        lights->add(make_shared<XZ_Plane>(point3{ 0.0, 4.995, 0.0 }, 5, 5, light_importance));
 
         // camera
-        camera cam(point3(0.0, 18, 100), point3(0, 6.0, 0.0), vec3(0, 1, 0), 45, aspect_ratio);
+        camera cam(point3(5, 5.0, 30), point3(0.0, 0.0, 0.0), vec3(0, 1, 0), 45, aspect_ratio);
 
         // Render
 

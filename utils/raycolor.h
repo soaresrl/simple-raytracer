@@ -20,7 +20,7 @@ color ray_color(const ray& r, const scene& scene, shared_ptr<hittable> direct_sa
     if (depth <= 0)
         return color(0, 0, 0);
 
-    if (!scene.world->hit(r, 0.001, infinity, rec)) return color{ 0.0, 0.0, 0.0 };
+    if (!scene.world->hit(r, 0.001, infinity, rec)) return color{ 0.3, 0.3, 0.3 };
 
     ray scattered;
 

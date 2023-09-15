@@ -15,6 +15,10 @@ public:
     double y() const { return e[1]; }
     double z() const { return e[2]; }
 
+    void setX(double _x) { e[0] = _x; }
+    void setY(double _y) { e[1] = _y; }
+    void setZ(double _z) { e[2] = _z; }
+
     inline static vec3 random() {
         return vec3(random_double(), random_double(), random_double());
     }

@@ -49,9 +49,22 @@ set(
 	sampling/cosine_pdf.h
 )
 
-add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING})
+set (
+	OCTREE
+	octree/voxel.h
+	octree/octree.h
+	octree/primitives/block.h
+	octree/primitives/cone.h
+	octree/primitives/cylinder.h
+	octree/primitives/solid.h
+	octree/primitives/sphere.h
+)
 
-target_include_directories(RayTracer PRIVATE external/glm)
+add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE})
 
-add_custom_command(TARGET RayTracer POST_BUILD 
-                    COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/assets")
+add_executable(Voxelizer voxelizer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE})
+
+#target_include_directories(RayTracer PRIVATE external/glm)
+
+#add_custom_command(TARGET RayTracer POST_BUILD 
+#                   COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/assets")

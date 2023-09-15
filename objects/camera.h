@@ -2,14 +2,13 @@
 #define CAMERA_H
 
 #include "utils/utility.h"
-#include <glm/glm.hpp>
 
 class camera {
 public:
 	camera(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float _aspect_ratio)  {
 		aspect_ratio = _aspect_ratio;
 		fov = vfov;
-		v_h = tan(glm::radians(45.0) / 2);
+		v_h = tan((45.0 * pi / 180) / 2);
 		v_w = aspect_ratio * v_h;
 		focal_length = 1.0;
 
