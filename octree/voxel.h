@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "geometry/vec3.h"
+#include "utils/utility.h"
 #include "materials/material.h"
 #include "objects/hittable.h"
 
@@ -11,7 +11,7 @@ enum VoxelType
 {
 	FILLED,
 	PARTIAL,
-	VOID
+	EMPTY
 };
 
 class Voxel : public hittable
@@ -86,7 +86,7 @@ public:
 
 		if (tmin < t_min || t_max < tmin) return false;
 
-		if (type == FILLED)
+		if (type == FILLED || (type == PARTIAL && children.size() == 0))
 		{
 			vec3 center_to_point = (r.at(tmin) - center);
 
@@ -128,17 +128,59 @@ public:
 		return false;
 	}
 
+	bool IsEmpty() {
+		return children.size() == 0;
+	}
+
+	bool Contains(point3 p) {
+		if (
+			((center.x() - size / 2.0) <= p.x() &&
+				(center.y() - size / 2.0) <= p.y() &&
+				(center.z() - size / 2.0) <= p.z()) &&
+			((center.x() + size / 2.0) >= p.x() &&
+				(center.y() + size / 2.0) >= p.y() &&
+				(center.z() + size / 2.0) >= p.z())
+			)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool IsBoxInside(point3 min, point3 max) {
+
+		if ((
+				min.x() >= (center.x() - size / 2.0) &&
+				min.y() >= (center.y() - size / 2.0) &&
+				min.z() >= (center.z() - size / 2.0)) &&
+			(
+				max.x() <= (center.x() + size / 2.0) &&
+				max.y() <= (center.y() + size / 2.0) &&
+				max.z() <= (center.z() + size / 2.0)
+
+				)
+			) 
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	VoxelType Type() const {
+		return type;
+	}
 
 private:
-	VoxelType type;
+	VoxelType type = EMPTY;
 	double size;
 	point3 center;
 
 	vec3 bounds[2];
 
-	shared_ptr<Material> material_ptr;
-
 public:
+	shared_ptr<Material> material_ptr;
 	std::vector<shared_ptr<Voxel>> children;
 };
 

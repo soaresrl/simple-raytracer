@@ -1,8 +1,7 @@
 #ifndef OCTREE_BLOCK
 #define OCTREE_BLOCK
 
-#include "geometry/vec3.h"
-
+#include "utils/utility.h"
 #include "solid.h"
 
 class Block : public Solid
@@ -46,7 +45,7 @@ public:
 		return max;
 	}
 
-	point3 Center() const {
+	point3 Center() const override {
 		return center;
 	}
 

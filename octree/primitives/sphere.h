@@ -40,7 +40,7 @@ public:
 		return max;
 	}
 
-	point3 Center() const {
+	point3 Center() const override {
 		return center;
 	}
 

@@ -1,7 +1,7 @@
 #ifndef OCTREE_CONE
 #define OCTREE_CONE
 
-#include "geometry/vec3.h"
+#include "utils/utility.h"
 #include "solid.h"
 
 class Cone : public Solid
@@ -48,7 +48,7 @@ public:
 		return max;
 	}
 
-	point3 Center() const {
+	point3 Center() const override {
 		return point3{ (max.x() + min.x()) / 2.0f, (max.y() + min.y()) / 2.0f, (max.z() + min.z()) / 2.0f };
 	}
 
