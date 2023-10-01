@@ -17,7 +17,7 @@ enum VoxelType
 class Voxel : public hittable
 {
 public:
-	Voxel(double _size, point3 _center, shared_ptr<Material> mat) : size(_size), center(_center), material_ptr(mat) {
+	Voxel(double _size, point3 _center, shared_ptr<Material> mat, int index) : size(_size), center(_center), material_ptr(mat), parent(nullptr), indexRelativeToFather(index) {
 		bounds[0] = vec3{
 			_center.x() - size / 2,
 			_center.y() - size / 2,
@@ -30,6 +30,35 @@ public:
 			_center.z() + size / 2
 		};
 	}
+	
+	Voxel(double _size, point3 _center, shared_ptr<Material> mat) : size(_size), center(_center), material_ptr(mat), parent(nullptr), indexRelativeToFather(-1) {
+		bounds[0] = vec3{
+			_center.x() - size / 2,
+			_center.y() - size / 2,
+			_center.z() - size / 2
+		};
+
+		bounds[1] = vec3{
+			_center.x() + size / 2,
+			_center.y() + size / 2,
+			_center.z() + size / 2
+		};
+	}
+	/*
+
+	Voxel(double _size, point3 _center, shared_ptr<Material> mat, shared_ptr<Voxel> _parent, int index) : size(_size), center(_center), material_ptr(mat), parent(_parent), indexRelativeToFather(index) {
+		bounds[0] = vec3{
+			_center.x() - size / 2,
+			_center.y() - size / 2,
+			_center.z() - size / 2
+		};
+
+		bounds[1] = vec3{
+			_center.x() + size / 2,
+			_center.y() + size / 2,
+			_center.z() + size / 2
+		};
+	}*/
 
 	float Size() const {
 		return size;
@@ -51,7 +80,11 @@ public:
 			voxelCenter.setY(center.y() + size * (i & 2 ? .25f : -.25f)); // 0010 & 0010 = 0010 -> 0010 (2) 0011 (3) 0110 (6) 0111 (7)
 			voxelCenter.setZ(center.z() + size * (i & 1 ? .25f : -.25f)); // 0010 & 0001 = 0001 -> 0001 (1) 0011 (3) 0101 (5) 0111 (7)
 			
-			children.push_back(make_shared<Voxel>(size / 2, voxelCenter, material_ptr));
+			auto vox = make_shared<Voxel>(size / 2, voxelCenter, material_ptr, i);
+
+			vox->parent = this;
+
+			children.push_back(vox);
 		}
 	}
 
@@ -86,7 +119,7 @@ public:
 
 		if (tmin < t_min || t_max < tmin) return false;
 
-		if (type == FILLED || (type == PARTIAL && children.size() == 0))
+		if (type == FILLED /*|| (type == PARTIAL && children.size() == 0)*/)
 		{
 			vec3 center_to_point = (r.at(tmin) - center);
 
@@ -174,14 +207,25 @@ public:
 
 private:
 	VoxelType type = EMPTY;
-	double size;
-	point3 center;
 
 	vec3 bounds[2];
 
 public:
-	shared_ptr<Material> material_ptr;
-	std::vector<shared_ptr<Voxel>> children;
+	double size;
+	point3 center;
+	shared_ptr<Material>			material_ptr;
+	std::vector<shared_ptr<Voxel>>	children;
+	Voxel*							parent;
+	int								indexRelativeToFather;
+	int								depth = 0;
+	// 0 -> BBL
+	// 1 -> BFL
+	// 2 -> UBL
+	// 3 -> UFL
+	// 4 -> BBR
+	// 5 -> BBR
+	// 6 -> BFR
+	// 7 -> UBR
 };
 
 #endif // !VOXEL_H

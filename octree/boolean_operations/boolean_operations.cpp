@@ -1,7 +1,7 @@
 #include "boolean_operations.h"
 
 shared_ptr<Voxel> Union(shared_ptr<Voxel> octree1, shared_ptr<Voxel> octree2) {
-	shared_ptr<Voxel> union_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr);
+	shared_ptr<Voxel> union_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr, -1);
 
 	stack<shared_ptr<Voxel>> stack1;
 	stack<shared_ptr<Voxel>> stack2;
@@ -82,7 +82,7 @@ shared_ptr<Voxel> Union(shared_ptr<Voxel> octree1, shared_ptr<Voxel> octree2) {
 }
 
 shared_ptr<Voxel> Intersection(shared_ptr<Voxel> octree1, shared_ptr<Voxel> octree2) {
-	shared_ptr<Voxel> union_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr);
+	shared_ptr<Voxel> union_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr, -1);
 
 	stack<shared_ptr<Voxel>> stack1;
 	stack<shared_ptr<Voxel>> stack2;
@@ -157,7 +157,7 @@ shared_ptr<Voxel> Intersection(shared_ptr<Voxel> octree1, shared_ptr<Voxel> octr
 }
 
 shared_ptr<Voxel> Difference(shared_ptr<Voxel> octree1, shared_ptr<Voxel> octree2) {
-	shared_ptr<Voxel> diff_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr);
+	shared_ptr<Voxel> diff_octree = make_shared<Voxel>(octree1->Size(), octree1->Center(), octree1->material_ptr, -1);
 
 	stack<shared_ptr<Voxel>> stack1;
 	stack<shared_ptr<Voxel>> stack2;

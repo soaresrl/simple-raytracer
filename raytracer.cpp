@@ -44,7 +44,7 @@ scene cornell_box() {
     objects.add_object(make_shared<YZ_Plane>(point3{ -5, 0.0, 0.0 }, 10, 10, green));
     objects.add_object(make_shared<YZ_Plane>(point3{ 5, 0.0, 0.0 }, 10, 10, red));
     objects.add_object(make_shared<FlipFace>(make_shared<XZ_Plane>(point3{ 0.0, 4.995, 0.0 }, 5, 5, light)));
-    objects.add_object(make_shared<FlipFace>(make_shared<YZ_Plane>(point3{ 0.0, 0.0, 0.0 }, 5, 5, light)));
+    //objects.add_object(make_shared<FlipFace>(make_shared<YZ_Plane>(point3{ 0.0, 0.0, 0.0 }, 5, 5, light)));
     objects.add_object(make_shared<XZ_Plane>(point3{ 0.0, 5, 0.0 }, 10, 10, white));
     objects.add_object(make_shared<XZ_Plane>(point3{ 0.0, -5, 0.0 }, 10, 10, white));
     objects.add_object(make_shared<XY_Plane>(point3{ 0.0, 0.0, -5 }, 10, 10, white));
@@ -55,16 +55,16 @@ scene cornell_box() {
     //objects.add_object(make_shared<sphere>(point3{ -3.0, -3.5, 0.0 }, 1.5, red));
 
     //Sphere sphere1{ point3{0.0f, -3.5f, 0.0f}, 1.5 };
-    Block block1{ point3{0.0, -3.5f, 0.0f}, 3.0 };
-    Sphere sphere2{ point3{1.5f, -2.0f, 0.0}, 1.5 };
+    //Block block1{ point3{0.0, -3.5f, 0.0f}, 3.0, 3.0, 3.0 };
+    Sphere sphere2{ point3{0.0f, -3.5f, 0.0}, 1.5 };
     // Block box{ point3{0.0, -3.5f, 0.0f}, 3.0 };
     // Cylinder cylinder{ point3{0.0, -3.5f, 0.0}, 1.5, 3.0 };
     // Cone cone{ point3{0.0, -3.5f, 0.0f}, 1.5, 3.0 };
 
-    block1.ComputeBoundingBox();
+    //block1.ComputeBoundingBox();
     sphere2.ComputeBoundingBox();
 
-    point3 bb_min;
+    /*point3 bb_min;
     point3 bb_max;
 
     bb_min.setX(block1.min.x() < sphere2.min.x() ? block1.min.x() : sphere2.min.x());
@@ -73,24 +73,24 @@ scene cornell_box() {
 
     bb_max.setX(block1.max.x() > sphere2.max.x() ? block1.max.x() : sphere2.max.x());
     bb_max.setY(block1.max.y() > sphere2.max.y() ? block1.max.y() : sphere2.max.y());
-    bb_max.setZ(block1.max.z() > sphere2.max.z() ? block1.max.z() : sphere2.max.z());
+    bb_max.setZ(block1.max.z() > sphere2.max.z() ? block1.max.z() : sphere2.max.z());*/
 
-    double size = max(max((bb_max.x() - bb_min.x()), bb_max.y() - bb_min.y()), (bb_max.z() - bb_min.z()));
+    double size = max(max((sphere2.max.x() - sphere2.min.x()), sphere2.max.y() - sphere2.min.y()), (sphere2.max.z() - sphere2.min.z()));
 
-    point3 center = (bb_max + bb_min) / 2.0f;
+    //point3 center = (bb_max + bb_min) / 2.0f;
 
-    shared_ptr<Voxel> octree1 = make_shared<Voxel>( size, center, red);
-    shared_ptr<Voxel> octree2 = make_shared<Voxel>( size, center, red );
+    shared_ptr<Voxel> octree1 = make_shared<Voxel>( size, sphere2.Center(), red);
+    //shared_ptr<Voxel> octree2 = make_shared<Voxel>( size, center, red);
 
-    BuildOctree(&block1, octree1, 5);
-    BuildOctree(&sphere2, octree2, 5);
+    //BuildOctree(&block1, octree1, 5);
+    BuildOctree(&sphere2, octree1, 5);
 
-    shared_ptr<Voxel> intersection_octree = Difference(octree1, octree2);
+    //shared_ptr<Voxel> intersection_octree = Difference(octree1, octree2);
     std::ofstream out_octree("17_09_TREE.txt");
 
-    WriteFromTraverse(intersection_octree, out_octree);
+    WriteFromTraverse(octree1, out_octree);
 
-    objects.add_object(intersection_octree);
+    objects.add_object(octree1);
     //objects.add_object(octree1);
     //objects.add_object(octree2);
 
@@ -102,8 +102,8 @@ int main() {
     const auto aspect_ratio = 16.0 / 9.0;
     const int image_width = 1600;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 10;
-    const int max_bounce = 5;
+    const int samples_per_pixel = 15;
+    const int max_bounce = 8;
 
     float refractive = 2.25;
 
@@ -113,7 +113,7 @@ int main() {
     
     //while (refractive <= 2.5)
     //{
-    std::ofstream outdata("19_09_Inter.ppm"/* + std::to_string(refractive) + ".ppm"*/);
+    std::ofstream outdata("30_09_Sphere.ppm"/* + std::to_string(refractive) + ".ppm"*/);
 
         // world 
         scene world = cornell_box();
@@ -143,7 +143,7 @@ int main() {
         auto light_importance = make_shared<DiffuseLight>(color(15, 15, 15));
 
         lights->add(make_shared<XZ_Plane>(point3{ 0.0, 4.995, 0.0 }, 5, 5, light_importance));
-        lights->add(make_shared<YZ_Plane>(point3{ 0.0, 0.0, 0.0 }, 5, 5, light_importance));
+        //lights->add(make_shared<YZ_Plane>(point3{ 0.0, 0.0, 0.0 }, 5, 5, light_importance));
 
         // camera
         //camera cam(point3(0.0, 0.0, 30), point3(0.0, 0.0, 0.0), vec3(0, 1, 0), 45, aspect_ratio);

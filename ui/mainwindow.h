@@ -28,10 +28,14 @@ public slots:
     void addCylinder();
     void addCone();
     void addBlock();
+    void addTheme();
 
     void applyUnion();
     void applyIntersection();
     void applyDifference();
+
+    void writeFile();
+    void readFile();
 
     void selectItem(const QItemSelection& selected, const QItemSelection& deselected);
 

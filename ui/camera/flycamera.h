@@ -22,8 +22,8 @@ public:
 private:
 	float speed = 0.2f;
 	float mouseSensitivity = 0.5f;
-	QVector3D direction{ -1.0f, 1.0f, -1.0f };
-	QVector3D up{ 0.0f, -1.0f, 0.0f };
+	QVector3D direction{ 1.0f, -1.0f, -1.0f };
+	QVector3D up{ 0.0f, 1.0f, 0.0f };
 
 	float fov = 45.0f;
 	float m_near = 0.1f;

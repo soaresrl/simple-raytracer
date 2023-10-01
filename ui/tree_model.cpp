@@ -114,6 +114,22 @@ void TreeModel::addTree(QString& str, const QModelIndex& parent, Drawable* d)
     endInsertRows();
 }
 
+bool TreeModel::removeRow(int row, const QModelIndex& parent)
+{
+    beginRemoveRows(parent, row, row);
+    
+    TreeItem* p = rootItem;
+
+    if (parent.isValid()) {
+        p = static_cast<TreeItem*>(parent.internalPointer());
+    }
+
+    p->removeChild(p->child(row));
+
+    endRemoveRows();
+    return true;
+}
+
 bool TreeModel::removeRows(int row, int count, const QModelIndex& parent)
 {
     beginRemoveRows(parent, row, row + count - 1);

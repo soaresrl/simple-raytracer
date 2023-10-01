@@ -31,6 +31,7 @@ public:
 
     void addTree(QString& str, const QModelIndex& parent, Drawable* d = nullptr);
     bool removeRows(int row, int count, const QModelIndex& parent) override;
+    bool removeRow(int row, const QModelIndex& parent);
     TreeItem* getItem(const QModelIndex& index) const;
 
 private:

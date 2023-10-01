@@ -80,7 +80,7 @@ void Canvas::AddPrimitive(uint type)
 	break;
 	case 1:
 	{
-		Block* block = new Block( point3{0.0f, 0.0f, 0.0}, 3.0 );
+		Block* block = new Block( point3{0.0f, 0.0f, 0.0}, 1.0f, 1.0f, 1.0f );
 		
 		block->ComputeBoundingBox();
 
@@ -95,7 +95,7 @@ void Canvas::AddPrimitive(uint type)
 	break;
 	case 2:
 	{
-		Cylinder* cylinder = new Cylinder( point3{0.0f, 0.0f, 0.0}, 1.5, 6.0 );
+		Cylinder* cylinder = new Cylinder( point3{0.0f, 0.0f, 0.0}, 1.5, 3.0 );
 		
 		cylinder->ComputeBoundingBox();
 
@@ -121,6 +121,44 @@ void Canvas::AddPrimitive(uint type)
 		primitives.Add(d);
 
 		emit PrimitiveAdded(d, QString("Cone"));
+	}
+	break;
+	case 4:
+	{
+		Cylinder* tronco = new Cylinder(point3{ 0.0f, 0.0f, 0.0f }, 1.0f, 10.0f);
+		Block* base = new Block(point3{ 0.0f, .0f, 0.0f }, 4.0, 1.5f, 4.0);
+		Block* engine = new Block(point3{ 0.0f, 10.0f, -1.0f }, 2.0, 2.0f, 4.0);
+		Block* rotor1 = new Block(point3{ 0.0f, 10.0f, 2.0f }, 10.0f, 2.0f, 2.0f);
+
+		tronco->ComputeBoundingBox();
+		base->ComputeBoundingBox();
+		engine->ComputeBoundingBox();
+		rotor1->ComputeBoundingBox();
+
+		Drawable* troncoD = new Drawable();
+		Drawable* baseD = new Drawable();
+		Drawable* engineD = new Drawable();
+		Drawable* rotor1D = new Drawable();
+
+		troncoD->solid = tronco;
+		baseD->solid = base;
+		engineD->solid = engine;
+		rotor1D->solid = rotor1;
+
+		primitives.Add(troncoD);
+		primitives.Add(baseD);
+		primitives.Add(engineD);
+		primitives.Add(rotor1D);
+
+		BuildOctreesFromPrimitives();
+
+		ApplyUnionFromDrawable(troncoD, engineD);
+		ApplyUnionFromDrawable(troncoD, rotor1D);
+		ApplyUnionFromDrawable(troncoD, baseD);
+
+		emit PrimitiveAdded(troncoD, QString("Theme"));
+
+		update();
 	}
 	break;
 	default:
@@ -216,40 +254,91 @@ void Canvas::resizeGL(int w, int h) {
 }
 
 void Canvas::keyPressEvent(QKeyEvent* ev) {
-	qDebug() << "Key Pressed";
-	std::cout << "Key Pressed" << std::endl;
-
 	switch (ev->key())
 	{
 	case Qt::Key_W:
-
-		std::cout << "Key W Pressed" << std::endl;
 		camera->moveForward(1.0f);
 		break;
 	case Qt::Key_S:
-
-		std::cout << "Key S Pressed" << std::endl;
 		camera->moveForward(-1.0f);
 		break;
 	case Qt::Key_A:
-
-		std::cout << "Key A Pressed" << std::endl;
 		camera->moveRight(-1.0f);
 		break;
 	case Qt::Key_D:
-
-		std::cout << "Key D Pressed" << std::endl;
 		camera->moveRight(1.0f);
 		break;
 	case Qt::Key_Up:
-
-		std::cout << "Key Up Pressed" << std::endl;
 		camera->moveUp(1.0f);
 		break;
 	case Qt::Key_Down:
-
-		std::cout << "Key Down Pressed" << std::endl;
 		camera->moveUp(-1.0f);
+		break;
+	case Qt::Key_6:
+		for (auto d : primitives.solids)
+		{
+			TranslateOct(d->octree, 0.3, 0.0, 0.0);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
+		break;
+	case Qt::Key_4:
+		for (auto d : primitives.solids)
+		{
+			TranslateOct(d->octree, -0.3, 0.0, 0.0);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
+		break;
+	case Qt::Key_2:
+		for (auto d : primitives.solids)
+		{
+			TranslateOct(d->octree, 0.0, -0.3, 0.0);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
+		break;
+	case Qt::Key_8:
+		for (auto d : primitives.solids)
+		{
+			TranslateOct(d->octree, 0.0, 0.3, 0.0);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
+		break;
+	case Qt::Key_H:
+		for (auto d : primitives.solids)
+		{
+			ScaleOct(d->octree, 1.25);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
+		break;
+	case Qt::Key_J:
+		for (auto d : primitives.solids)
+		{
+			ScaleOct(d->octree, 0.85);
+
+			d->nodesPoints.clear();
+			d->elementsIndices.clear();
+
+			GetPointsFromTraverse(d->octree, &d->nodesPoints, &d->elementsIndices);
+		}
 		break;
 	case Qt::Key_R:
 	{
@@ -307,4 +396,31 @@ void Canvas::ApplyDifferenceFromDrawable(Drawable* first, Drawable* second) {
 	GetPointsFromTraverse(first->octree, &first->nodesPoints, &first->elementsIndices);
 
 	update();
+}
+
+void Canvas::WriteFile() {
+	int i = 0;
+	for (auto& obj : primitives.solids)
+	{
+		std::ofstream out_octree("29_09_TREE_" + std::to_string(i) + ".txt");
+		WriteFromTraverse(obj->octree, out_octree);
+
+		i++;
+	}
+}
+
+void Canvas::ReadFile() {
+	std::ifstream in("29_09_TREE_0.txt");
+
+	auto oct = ReadFromFile(in);
+
+	Drawable* d = new Drawable();
+
+	d->octree = oct;
+
+	primitives.Add(d, false);
+
+	update();
+
+	emit PrimitiveAdded(d, QString("File"));
 }

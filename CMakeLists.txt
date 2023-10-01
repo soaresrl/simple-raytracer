@@ -88,6 +88,7 @@ set (
 
 #add_executable(RayTracer raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE})
 add_executable(RayTracer main.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE} ${UI})
+add_executable(ImageGenerator raytracer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE})
 
 #add_executable(Voxelizer voxelizer.cpp ${COMMON} ${OBJECTS} ${UTILITY} ${SAMPLING} ${OCTREE})
 

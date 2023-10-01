@@ -52,10 +52,15 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     auto cylinderAction = new QAction("Add Cylinder", this);
     auto coneAction = new QAction("Add Cone", this);
     auto blockAction = new QAction("Add Block", this);
+    auto themeAction = new QAction("Add Theme", this);
 
     auto unionAction = new QAction("Apply Union", this);
     auto intersectionAction = new QAction("Apply Intersection", this);
     auto differenceAction = new QAction("Apply Difference", this);
+
+    auto writeFileAction = new QAction("Write File", this);
+    auto readFileAction = new QAction("Read File", this);
+
 
     connect(buildOctreeAction, &QAction::triggered, this, &MainWindow::buildOctree);
     connect(clearAction, &QAction::triggered, this, &MainWindow::clearScene);
@@ -64,10 +69,14 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     connect(cylinderAction, &QAction::triggered, this, &MainWindow::addCylinder);
     connect(coneAction, &QAction::triggered, this, &MainWindow::addCone);
     connect(blockAction, &QAction::triggered, this, &MainWindow::addBlock);
+    connect(themeAction, &QAction::triggered, this, &MainWindow::addTheme);
 
     connect(unionAction, &QAction::triggered, this, &MainWindow::applyUnion);
     connect(intersectionAction, &QAction::triggered, this, &MainWindow::applyIntersection);
     connect(differenceAction, &QAction::triggered, this, &MainWindow::applyDifference);
+
+    connect(writeFileAction, &QAction::triggered, this, &MainWindow::writeFile);
+    connect(readFileAction, &QAction::triggered, this, &MainWindow::readFile);
 
     menu->addAction(buildOctreeAction);
     menu->addAction(clearAction);
@@ -76,12 +85,24 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     menu->addAction(cylinderAction);
     menu->addAction(coneAction);
     menu->addAction(blockAction);
+    menu->addAction(themeAction);
     menu->addSeparator();
     menu->addAction(unionAction);
     menu->addAction(intersectionAction);
     menu->addAction(differenceAction);
+    menu->addSeparator();
+    menu->addAction(writeFileAction);
+    menu->addAction(readFileAction);
 
     menu->popup(ui->treeView->header()->mapToGlobal(pos));
+}
+
+void MainWindow::writeFile() {
+    ui->openGLWidget->WriteFile();
+}
+
+void MainWindow::readFile() {
+    ui->openGLWidget->ReadFile();
 }
 
 void MainWindow::buildOctree() {
@@ -108,6 +129,10 @@ void MainWindow::addCylinder() {
 
 void MainWindow::addCone() {
     emit addObject(3);
+}
+
+void MainWindow::addTheme() {
+    emit addObject(4);
 }
 
 void MainWindow::selectItem(const QItemSelection& selected, const QItemSelection& deselected) {
@@ -138,14 +163,41 @@ void MainWindow::selectItem(const QItemSelection& selected, const QItemSelection
 
 void MainWindow::applyUnion() {
     ui->openGLWidget->ApplyUnionFromDrawable(first->m_object, second->m_object);
+
+    QList<QModelIndex> lst = ui->treeView->selectionModel()->selectedIndexes();
+    ui->treeView->selectionModel()->select(lst.last(), QItemSelectionModel::Deselect);
+
+    auto row = second->row();
+
+    m_pTreeModel->removeRow(row, QModelIndex());
+
+    second = nullptr;
 }
 
 void MainWindow::applyIntersection() {
     ui->openGLWidget->ApplyIntersectionFromDrawable(first->m_object, second->m_object);
+
+    QList<QModelIndex> lst = ui->treeView->selectionModel()->selectedIndexes();
+    ui->treeView->selectionModel()->select(lst.last(), QItemSelectionModel::Deselect);
+
+    auto row = second->row();
+
+    m_pTreeModel->removeRow(row, QModelIndex());
+
+    second = nullptr;
 }
 
 void MainWindow::applyDifference() {
     ui->openGLWidget->ApplyDifferenceFromDrawable(first->m_object, second->m_object);
+
+    QList<QModelIndex> lst = ui->treeView->selectionModel()->selectedIndexes();
+    ui->treeView->selectionModel()->select(lst.last(), QItemSelectionModel::Deselect);
+
+    auto row = second->row();
+
+    m_pTreeModel->removeRow(row, QModelIndex());
+
+    second = nullptr;
 }
 
 

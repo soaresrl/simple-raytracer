@@ -43,10 +43,10 @@ public:
 	SolidList(){}
 	~SolidList(){}
 
-	void Add(Drawable* s) {
+	void Add(Drawable* s, bool computeBB = true) {
 		solids.push_back(s);
 
-		ComputeBoundingBox();
+		if(computeBB) ComputeBoundingBox();
 	}
 
 	void ComputeBoundingBox() {
@@ -96,9 +96,12 @@ public:
 
 			point3 center = (max + min) / 2.0f;
 
-			shared_ptr<Voxel> octree = make_shared<Voxel>(size, center, red);
+			shared_ptr<Voxel> octree = make_shared<Voxel>(size, center, red, -1);
 
-			BuildOctree(i->solid, octree, 6);
+			BuildOctree(i->solid, octree, 7);
+
+			qDebug() << "Volume=" << ComputeTotalVolume(octree);
+			qDebug() << "Area=" << ComputeSurfaceArea(octree);
 
 			std::vector<float> nodesPoints;
 			std::vector<uint> elementsIndices;
@@ -151,6 +154,9 @@ public:
 	void ApplyIntersectionFromDrawable(Drawable* first, Drawable* second);
 	void ApplyDifferenceFromDrawable(Drawable* first, Drawable* second);
 
+	void WriteFile();
+	void ReadFile();
+
 protected:
 	void initializeGL() override;
 	void paintGL() override;
@@ -158,7 +164,6 @@ protected:
 	void keyPressEvent(QKeyEvent* event) override;
 
 	void DrawObjects();
-
 
 	FlyCamera* camera;
 	QOpenGLShaderProgram* program;

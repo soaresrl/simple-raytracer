@@ -24,7 +24,7 @@ public:
 	{
 		if (p.y() >= min.y() && p.y() <= max.y())
 		{
-			double radiusForHeight = (radius / height) * p.y();
+			double radiusForHeight = (radius / height) * (height - p.y());
 
 			double distance = pow((p.x() - basePoint.x()), 2) + pow((p.z() - basePoint.z()), 2);
 

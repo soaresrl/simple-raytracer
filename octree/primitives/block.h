@@ -7,17 +7,17 @@
 class Block : public Solid
 {
 public:
-	Block(point3 _center, double _size) : center(_center), size(_size){}
+	Block(point3 _center, double lx, double ly, double lz) : center(_center), m_lx(lx), m_ly(ly), m_lz(lz) {}
 
 	void ComputeBoundingBox()
 	{
-		min.setX(center.x() - size / 2.0f);
-		min.setY(center.y() - size / 2.0f);
-		min.setZ(center.z() - size / 2.0f);
+		min.setX(center.x() - m_lx / 2.0f);
+		min.setY(center.y() - m_ly / 2.0f);
+		min.setZ(center.z() - m_lz / 2.0f);
 
-		max.setX(center.x() + size / 2.0f);
-		max.setY(center.y() + size / 2.0f);
-		max.setZ(center.z() + size / 2.0f);
+		max.setX(center.x() + m_lx / 2.0f);
+		max.setY(center.y() + m_ly / 2.0f);
+		max.setZ(center.z() + m_lz / 2.0f);
 	}
 
 	virtual bool IsInside(point3 p) override
@@ -51,7 +51,9 @@ public:
 
 private:
 	point3 center;
-	double size;
+	double m_lx;
+	double m_ly;
+	double m_lz;
 
 public:
 	point3 min;
